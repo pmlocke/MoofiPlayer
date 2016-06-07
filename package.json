@@ -21,7 +21,7 @@
     "postinstall": "bower install",
 
     "prestart": "npm install ",
-    "start": "http-server -a localhost -p 6663 -c-1 ./app | serve -C ~/MoofiMusic",
+    "start": "http-server -a localhost -p 6663 -c-1 ./app | serve -C ~/Dropbox/Music/MoofiMusic",
 
     "pretest": "npm install",
     "test": "karma start karma.conf.js",

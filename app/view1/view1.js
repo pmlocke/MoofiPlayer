@@ -1,14 +1,13 @@
 'use strict';
 
-angular.module('myApp.view1', ['ngRoute'])
-    .constant('_', window._)
+angular.module('myApp.view1', ['ngRoute', 'ngLodash'])
     .config(['$routeProvider', function ($routeProvider) {
         $routeProvider.when('/view1', {
             templateUrl: 'view1/view1.html',
             controller: 'AudioCtrl'
         });
     }])
-    .controller('AudioCtrl', ["$sce", "$http", "$scope", function ($sce, $http, $scope) {
+    .controller('AudioCtrl', ["$sce", "$http", "$scope", "$q", "$log", "lodash", function ($sce, $http, $scope, $q, $log, _) {
         var ctrl = this;
         ctrl.player1 = null;
         ctrl.player2 = null;
@@ -19,21 +18,10 @@ angular.module('myApp.view1', ['ngRoute'])
         ctrl.fadeIn = null;
         ctrl.fadeOut = null;
         ctrl.vibes = null;
+        ctrl.currentVibe = null;
         ctrl.nextVibe = null;
 
         this.config = {
-            source1: [
-                {
-                    src: $sce.trustAsResourceUrl("http://static.videogular.com/assets/videos/videogular.mp4"),
-                    type: "video/mp4"
-                }
-            ],
-            source2: [
-                {
-                    src: $sce.trustAsResourceUrl("http://0.0.0.0:3000/Milky Chance - Stolen Dance (Alex Brandt's Saxual Edit).mp3"),
-                    type: "audio/mp3"
-                }
-            ],
             theme: "bower_components/videogular-themes-default/videogular.css",
             plugins: {
                 poster: "http://www.videogular.com/assets/images/videogular.png"
@@ -41,25 +29,46 @@ angular.module('myApp.view1', ['ngRoute'])
         };
 
         ctrl.init = function () {
-            var r = {playIndex: 0, tracks: []};
-            var g = {playIndex: 0, tracks: []};
-            var b = {playIndex: 0, tracks: []};
-            ctrl.vibes = {"red": r, "green": g, "blue": b};
+            $log.log("Getting TrackLists");
+            $q.all([
 
-            ctrl.getTracklist("Moofi futures", r);
-            ctrl.getTracklist("Neo Speakeasy", g);
-            ctrl.getTracklist("Assorted Psychedelic", b);
+                ctrl.getTracklist("Moofi Futures"),
+                ctrl.getTracklist("Neo Speakeasy"),
+                ctrl.getTracklist("Space Beats")
+            ]).then(function (trackSources) {
+                $log.log("Tracks loaded!");
+                $log.log(trackSources);
+                var r = {playIndex: 0, tracks: trackSources[0]};
+                var g = {playIndex: 0, tracks: trackSources[1]};
+                var b = {playIndex: 0, tracks: trackSources[2]};
+                ctrl.vibes = {"red": r, "green": g, "blue": b};
+                ctrl.currentVibe = ctrl.randomVibe();
+                $log.log("Current Vibe:");
+                $log.log(ctrl.currentVibe);
+                ctrl.player1.stop();
 
+                $log.log(ctrl.currentVibe.tracks[ctrl.currentVibe.playIndex].sources);
+                ctrl.config.source1 = ctrl.currentVibe.tracks[ctrl.currentVibe.playIndex].sources;
+
+
+            }, function (reason) {
+                // Error callback where reason is the value of the first rejected promise
+                $log.error("Could not Load Tracks: did you host the right directory?");
+                $log.error(reason);
+            });
         };
 
         ctrl.onPlayer1Ready = function (API) {
             ctrl.player1 = API;
             ctrl.player1.setVolume(1);
+            $log.log("player1 ready");
         };
 
         ctrl.onPlayer2Ready = function (API) {
             ctrl.player2 = API;
             ctrl.player2.setVolume(1);
+            $log.log("player2 ready");
+            ctrl.init();
         };
 
         ctrl.onTick = function (currentTime, duration) {
@@ -104,23 +113,40 @@ angular.module('myApp.view1', ['ngRoute'])
                 ctrl.fadeIn = null;
                 ctrl.fadeOut = null;
                 ctrl.lockState = false;
+                $log.log("Track Completed");
             }
         };
 
+
+        /*
+         * Combines multiple promises into a single promise
+         * that will be resolved when all of the input promises are resolved
+         */
+
+
         //HTTP Methods
-        ctrl.getTracklist = function (listName, vibe) {
-            var host = "http://localhost:3000/";
-            $http.get(host + listName, {headers: "Accept:application/json"}).then(function (response) {
+        ctrl.getTracklist = function (listName) {
+            var deferred = $q.defer();
+            var trackRoot = "http://localhost:3000/" + listName + "/";
+
+            $http.get(trackRoot, {headers: {'Accept': 'application/json'}}).then(function (response) {
                 var sourceList = [];
 
-                _.forEach((response), function (value) {
-                    sourceList.push({src: $sce.trustAsResourceUrl(host + value), type: "audio/mp3"});
+                _.forEach((response.data), function (track) {
+                    sourceList.push({
+                        sources: [{
+                            src: $sce.trustAsResourceUrl(trackRoot + track),
+                            type: "audio/mp3"
+                        }]
+                    });
                 });
 
-                _.shuffle(sourceList);
-
-                vibe.tracks = sourceList;
+                deferred.resolve(_.shuffle(sourceList));
+            }, function (response) {
+                deferred.reject(response);
             });
+
+            return deferred.promise;
         };
 
         ctrl.getVibe = function () {
@@ -141,5 +167,5 @@ angular.module('myApp.view1', ['ngRoute'])
             return ctrl.vibes[key];
         };
 
-        ctrl.init();
+
     }]);
