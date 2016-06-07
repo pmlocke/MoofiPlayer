@@ -1,0 +1,46 @@
+<div ng-controller="AudioCtrl as controller" class="videogular-container">
+    <videogular vg-player-ready="controller.onPlayer1Ready($API)"
+                vg-update-time="controller.onTick($currentTime, $duration)"
+                vg-complete="controller.onComplete()"
+                vg-theme="controller.config.theme" class="videogular-container audio">
+        <vg-media vg-src="controller.config.source1"
+                  vg-type="audio">
+        </vg-media>
+        <vg-controls>
+            <vg-play-pause-button></vg-play-pause-button>
+            <vg-time-display>{{ currentTime | date:'mm:ss' }}</vg-time-display>
+            <vg-scrub-bar>
+                <vg-scrub-bar-current-time></vg-scrub-bar-current-time>
+            </vg-scrub-bar>
+            <vg-time-display>{{ timeLeft | date:'mm:ss' }}</vg-time-display>
+            <vg-volume>
+                <vg-mute-button></vg-mute-button>
+                <vg-volume-bar></vg-volume-bar>
+            </vg-volume>
+        </vg-controls>
+        <vg-poster vg-url='controller.config.plugins.poster'></vg-poster>
+    </videogular>
+
+    <videogular vg-player-ready="controller.onPlayer2Ready($API)" vg-theme="controller.config.theme"
+                vg-update-time="controller.onTick($currentTime, $duration)"
+                vg-complete="controller.onComplete()"
+                class="videogular-container audio">
+        <vg-media vg-src="controller.config.source2"
+                  vg-type="audio">
+        </vg-media>
+        <vg-controls>
+            <vg-play-pause-button></vg-play-pause-button>
+            <vg-time-display>{{ currentTime | date:'mm:ss' }}</vg-time-display>
+            <vg-scrub-bar>
+                <vg-scrub-bar-current-time></vg-scrub-bar-current-time>
+            </vg-scrub-bar>
+            <vg-time-display>{{ timeLeft | date:'mm:ss' }}</vg-time-display>
+            <vg-volume>
+                <vg-mute-button></vg-mute-button>
+                <vg-volume-bar></vg-volume-bar>
+            </vg-volume>
+        </vg-controls>
+        <vg-poster vg-url='controller.config.plugins.poster'></vg-poster>
+    </videogular>
+
+</div>
