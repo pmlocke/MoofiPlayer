@@ -46,9 +46,9 @@ angular.module('myApp.view1', ['ngRoute'])
             var b = {playIndex: 0, tracks: []};
             ctrl.vibes = {"red": r, "green": g, "blue": b};
 
-            ctrl.getTracklist("red", r);
-            ctrl.getTracklist("green", g);
-            ctrl.getTracklist("blue", b);
+            ctrl.getTracklist("Moofi futures", r);
+            ctrl.getTracklist("Neo Speakeasy", g);
+            ctrl.getTracklist("Assorted Psychedelic", b);
 
         };
 
@@ -109,11 +109,11 @@ angular.module('myApp.view1', ['ngRoute'])
 
         //HTTP Methods
         ctrl.getTracklist = function (listName, vibe) {
-            var host = "http://0.0.0.0:3000/";
+            var host = "http://localhost:3000/";
             $http.get(host + listName, {headers: "Accept:application/json"}).then(function (response) {
                 var sourceList = [];
 
-                _(response).forEach(function (value) {
+                _.forEach((response), function (value) {
                     sourceList.push({src: $sce.trustAsResourceUrl(host + value), type: "audio/mp3"});
                 });
 
